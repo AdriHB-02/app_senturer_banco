@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../data/models/cuenta_model.dart';
+import '../../data/models/transaccion_model.dart';
 import '../../data/repositories/cuenta_repository.dart';
+import '../../data/repositories/transaccion_repository.dart';
 import '../navigation/flyout_menu.dart';
 import '../widgets/common_widgets.dart';
 
@@ -17,6 +19,7 @@ class TransferenciasPage extends StatefulWidget {
 class _TransferenciasPageState extends State<TransferenciasPage> {
   final _formKey = GlobalKey<FormState>();
   final _cuentaRepository = CuentaRepository();
+  final _transaccionRepository = TransaccionRepository();
   final _numeroDestinoController = TextEditingController();
   final _montoController = TextEditingController();
   final _descripcionController = TextEditingController();
@@ -24,6 +27,7 @@ class _TransferenciasPageState extends State<TransferenciasPage> {
   List<CuentaModel> _cuentas = [];
   CuentaModel? _cuentaOrigenSeleccionada;
   bool _isLoading = true;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -51,14 +55,85 @@ class _TransferenciasPageState extends State<TransferenciasPage> {
     }
   }
 
-  void _realizarTransferencia() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Funcionalidad próximamente'),
-        backgroundColor: AppColors.warning,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+  String? _validarNumeroDestino(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Ingrese el número de cuenta destino';
+    }
+    if (value.trim() == _cuentaOrigenSeleccionada?.numeroCuenta) {
+      return 'No puede transferir a la misma cuenta';
+    }
+    return null;
+  }
+
+  String? _validarMonto(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Ingrese el monto a transferir';
+    }
+    final monto = double.tryParse(value);
+    if (monto == null || monto <= 0) {
+      return 'Monto inválido';
+    }
+    if (_cuentaOrigenSeleccionada != null &&
+        monto > _cuentaOrigenSeleccionada!.saldo) {
+      return 'Saldo insuficiente';
+    }
+    return null;
+  }
+
+  Future<void> _realizarTransferencia() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final monto = double.parse(_montoController.text);
+      final cuentaOrigen = _cuentaOrigenSeleccionada!;
+
+      final transaccion = TransaccionModel(
+        cuentaId: cuentaOrigen.id!,
+        tipo: TipoTransaccion.transferencia,
+        monto: monto,
+        descripcion: _descripcionController.text.isNotEmpty
+            ? _descripcionController.text
+            : 'Transferencia a ${_numeroDestinoController.text}',
+        fecha: DateTime.now().toIso8601String(),
+        estado: EstadoTransaccion.completada,
+      );
+
+      await _transaccionRepository.insertar(transaccion);
+
+      final nuevoSaldo = cuentaOrigen.saldo - monto;
+      await _cuentaRepository.actualizarSaldo(cuentaOrigen.id!, nuevoSaldo);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Transferencia realizada con éxito'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        _numeroDestinoController.clear();
+        _montoController.clear();
+        _descripcionController.clear();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error al realizar la transferencia'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
   }
 
   @override
@@ -85,11 +160,11 @@ class _TransferenciasPageState extends State<TransferenciasPage> {
       body: _isLoading
           ? const LoadingWidget(mensaje: 'Cargando cuentas...')
           : _cuentas.isEmpty
-              ? const EmptyStateWidget(
-                  icon: Icons.account_balance_wallet_outlined,
-                  mensaje: AppStrings.estadoVacioCuentas,
-                )
-              : _buildForm(),
+          ? const EmptyStateWidget(
+              icon: Icons.account_balance_wallet_outlined,
+              mensaje: AppStrings.estadoVacioCuentas,
+            )
+          : _buildForm(),
     );
   }
 
@@ -199,6 +274,7 @@ class _TransferenciasPageState extends State<TransferenciasPage> {
                       prefixIcon: Icon(Icons.person_outline),
                     ),
                     keyboardType: TextInputType.text,
+                    validator: _validarNumeroDestino,
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -216,10 +292,15 @@ class _TransferenciasPageState extends State<TransferenciasPage> {
                       hintText: '0.00',
                       prefixIcon: Icon(Icons.attach_money),
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}'),
+                      ),
                     ],
+                    validator: _validarMonto,
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -244,14 +325,23 @@ class _TransferenciasPageState extends State<TransferenciasPage> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: _realizarTransferencia,
-                      child: const Text(
-                        'Realizar Transferencia',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      onPressed: _isProcessing ? null : _realizarTransferencia,
+                      child: _isProcessing
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Realizar Transferencia',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ],
