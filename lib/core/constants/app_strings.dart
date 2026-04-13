@@ -52,7 +52,7 @@ class AppStrings {
   static const String estadoTransaccionCompletada = 'completada';
   static const String estadoTransaccionFallida = 'fallida';
 
-  static const String urlOficial = 'https://senturer.figma.make';
+  static const String urlOficial = 'https://senturer.figma.site';
 
   static const String textoBotonAceptar = 'Aceptar';
   static const String textoBotonCancelar = 'Cancelar';

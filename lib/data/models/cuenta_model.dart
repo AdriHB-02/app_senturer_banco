@@ -16,7 +16,7 @@ class CuentaModel {
     required this.numeroCuenta,
     required this.tipo,
     this.saldo = 0.0,
-    this.moneda = 'USD',
+    this.moneda = 'MXN',
     required this.fechaApertura,
     this.activa = true,
   });

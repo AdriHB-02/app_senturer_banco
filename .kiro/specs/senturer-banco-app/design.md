@@ -610,7 +610,7 @@ CREATE TABLE cuentas (
   numero_cuenta TEXT NOT NULL UNIQUE,
   tipo TEXT NOT NULL CHECK(tipo IN ('ahorro', 'corriente', 'digital')),
   saldo REAL NOT NULL DEFAULT 0.0,
-  moneda TEXT NOT NULL DEFAULT 'USD',
+  moneda TEXT NOT NULL DEFAULT 'MXN',
   fecha_apertura TEXT NOT NULL,
   activa INTEGER NOT NULL DEFAULT 1,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
@@ -702,7 +702,7 @@ class MigrationV1 {
         numero_cuenta TEXT NOT NULL UNIQUE,
         tipo TEXT NOT NULL CHECK(tipo IN ('ahorro', 'corriente', 'digital')),
         saldo REAL NOT NULL DEFAULT 0.0,
-        moneda TEXT NOT NULL DEFAULT 'USD',
+        moneda TEXT NOT NULL DEFAULT 'MXN',
         fecha_apertura TEXT NOT NULL,
         activa INTEGER NOT NULL DEFAULT 1,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE

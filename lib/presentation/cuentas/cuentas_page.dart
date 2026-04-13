@@ -40,10 +40,7 @@ class _CuentasPageState extends State<CuentasPage>
   }
 
   Future<void> _loadData() async {
-    await Future.wait([
-      _loadCuentas(),
-      _loadTransacciones(),
-    ]);
+    await Future.wait([_loadCuentas(), _loadTransacciones()]);
   }
 
   Future<void> _loadCuentas() async {
@@ -110,6 +107,11 @@ class _CuentasPageState extends State<CuentasPage>
         ),
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: AppColors.primaryLight,
+          indicatorColor: Colors.white,
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
           tabs: const [
             Tab(
               icon: Icon(Icons.credit_card_outlined),
@@ -125,10 +127,7 @@ class _CuentasPageState extends State<CuentasPage>
       drawer: const FlyoutMenu(),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildTabMisCuentas(),
-          _buildTabMovimientos(),
-        ],
+        children: [_buildTabMisCuentas(), _buildTabMovimientos()],
       ),
     );
   }
@@ -296,13 +295,10 @@ class _CuentasPageState extends State<CuentasPage>
         itemBuilder: (context, index) {
           final transaccion = _transacciones[index];
           final cuenta = _cuentas.cast<CuentaModel?>().firstWhere(
-                (c) => c?.id == transaccion.cuentaId,
-                orElse: () => null,
-              );
-          return TransaccionItem(
-            transaccion: transaccion,
-            cuenta: cuenta,
+            (c) => c?.id == transaccion.cuentaId,
+            orElse: () => null,
           );
+          return TransaccionItem(transaccion: transaccion, cuenta: cuenta);
         },
       ),
     );

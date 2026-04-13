@@ -22,7 +22,7 @@ class MigrationV1Initial {
         numero_cuenta TEXT NOT NULL UNIQUE,
         tipo TEXT NOT NULL CHECK(tipo IN ('ahorro', 'corriente', 'digital')),
         saldo REAL NOT NULL DEFAULT 0.0,
-        moneda TEXT NOT NULL DEFAULT 'USD',
+        moneda TEXT NOT NULL DEFAULT 'MXN',
         fecha_apertura TEXT NOT NULL,
         activa INTEGER NOT NULL DEFAULT 1,
         FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE
@@ -69,7 +69,7 @@ class MigrationV1Initial {
       'numero_cuenta': 'SAV-001-2026',
       'tipo': 'ahorro',
       'saldo': 5000.00,
-      'moneda': 'USD',
+      'moneda': 'MXN',
       'fecha_apertura': now,
       'activa': 1,
     });
@@ -79,7 +79,7 @@ class MigrationV1Initial {
       'numero_cuenta': 'DGT-002-2026',
       'tipo': 'digital',
       'saldo': 1250.50,
-      'moneda': 'USD',
+      'moneda': 'MXN',
       'fecha_apertura': now,
       'activa': 1,
     });

@@ -92,30 +92,6 @@ class FlyoutMenu extends StatelessWidget {
                         ),
                         onTap: () => _launchUrl(context),
                       ),
-                      ListTile(
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.exit_to_app,
-                            color: AppColors.error,
-                          ),
-                        ),
-                        title: const Text(
-                          AppStrings.menuItemSalir,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.error,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          _exitApp();
-                        },
-                      ),
                     ],
                   ),
                 ),
