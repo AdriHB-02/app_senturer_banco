@@ -227,3 +227,4 @@ flutter devices
 ## Licencia
 
 Este proyecto es propiedad de SENTURER. Todos los derechos reservados.
+Este es un proyecto escolar
